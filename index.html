@@ -1,0 +1,555 @@
+<html>
+    <head>
+        <title>Chess Board</title>
+    </head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
+    <style>
+        *{
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .chessBoard{
+            display: grid;
+            border: 1px solid black;
+            height: 600px;
+            width: 600px;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+        }
+        .chessBoard > div{
+            text-align: center;
+            padding: 10px;
+            background-color: #E6BA8F;
+        }
+        .chessBoard > div:nth-child(16n+1), 
+        .chessBoard > div:nth-child(16n+3),
+        .chessBoard > div:nth-child(16n+5),
+        .chessBoard > div:nth-child(16n+7),
+        .chessBoard > div:nth-child(16n+10),
+        .chessBoard > div:nth-child(16n+12),
+        .chessBoard > div:nth-child(16n+14),
+        .chessBoard > div:nth-child(16n+16){
+            background-color: #BD7D40;
+        }
+        .white{
+            color: white;
+        }
+        .black{
+            color: black;
+        }
+        .picked{
+            background-color: orange !important;
+        }
+        .drop{
+            background-color: skyblue !important;
+            border: 1px solid black;
+        }
+        .cut{
+            background-color: tomato !important;
+        }
+        .main-div{
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+        }
+        .main-div > div {
+            margin: 20px;
+        }
+        .stats > * {
+            margin: 10px;
+        }
+        .playerChance{
+            font-size: 30px;
+        }
+        .stats button{
+            font-size: 20px;
+            padding: 10px 20px;
+            border: none;
+            background-color: lime;
+            border-radius: 10px;
+        }
+        .stats input{
+            font-size: 25px;
+            padding: 10px;
+        }
+        .alert{
+            color: red;
+        }
+        @media screen and (max-width: 1000px){
+            .main-div{
+                flex-direction: column-reverse;
+            }
+        }
+    </style>
+    <body>
+        <div class="main-div">
+            <div class="chessBoard">
+            </div>
+            <div class="stats">
+                <input id="p1" placeholder="Player 1 name"><br>
+                <input id="p2" placeholder="Player 2 name">
+                <div class="playerChance"></div>
+                <div class="alert"></div>
+                <button id = "button">Start</button>
+            </div>
+        </div>
+        <script>
+            var board = []
+            var pieces = []
+            var playerChance = 1
+            var picked = -1
+            var button, player1Name, player2Name
+
+            function createBoard(){
+                var div
+                var arr, i, j, square
+                for( i = 0 ; i < 8; i++ ){
+                    arr = []
+                    for( j = 0 ; j < 8; j++ ){
+                        div = document.createElement('div')
+                        div.setAttribute('x',i)
+                        div.setAttribute('y',j)
+                        square = {occupied :-1, element:div}
+                        arr.push(square)
+                    }
+                    board.push(arr)    
+                }
+            }
+
+
+            function createPieces(){
+                createPiece( 0, 0, 1, 'rook', 'white')
+                createPiece( 0, 1, 1, 'knight', 'white')
+                createPiece( 0, 2, 1, 'bishop', 'white')
+                createPiece( 0, 3, 1, 'queen', 'white')
+                createPiece( 0, 4, 1, 'king', 'white')
+                createPiece( 0, 5, 1, 'bishop', 'white')
+                createPiece( 0, 6, 1, 'knight', 'white')
+                createPiece( 0, 7, 1, 'rook', 'white')
+
+                for( i = 0 ; i < 8; i++ ){
+                    createPiece( 1, i, 1, 'pawn', 'white')
+                }
+
+                for( i = 0 ; i < 8; i++ ){
+                    createPiece( 6, i, 2, 'pawn', 'black')
+                }
+                
+                createPiece( 7, 0, 2, 'rook', 'black')
+                createPiece( 7, 1, 2, 'knight', 'black')
+                createPiece( 7, 2, 2, 'bishop', 'black')
+                createPiece( 7, 3, 2, 'queen', 'black')
+                createPiece( 7, 4, 2, 'king', 'black')
+                createPiece( 7, 5, 2, 'bishop', 'black')
+                createPiece( 7, 6, 2, 'knight', 'black')
+                createPiece( 7, 7, 2, 'rook', 'black')
+            }
+
+            
+            function createPiece(x, y , player, type , color){
+                var icon =  document.createElement('i')
+                icon.setAttribute('class', 'fas fa-3x fa-chess-' + type + ' ' + color)
+                icon.setAttribute('id', pieces.length)
+                icon.addEventListener( 'click', pick )
+
+                piece={
+                        x: x,
+                        y: y,
+                        player: player,
+                        element: icon,
+                        type: type
+                        }
+    
+                pieces.push(piece)
+            }
+
+            
+            function renderBoard(){
+                var chessDiv = document.querySelector( '.chessBoard' )
+                chessDiv.textContent = ''
+                var square
+                for( i = 0 ; i < 8; i++ ){
+                    for( j = 0 ; j < 8; j++ ){
+                        square  = board[i][j]
+                        chessDiv.append( square.element )
+                    }
+                }
+            }
+
+            
+            function renderPieces(){
+                console.log(pieces)
+                console.log(board)
+                var piece,placedSquare
+                for( var i in pieces){
+                    piece = pieces[i]
+                    placedSquare = board[piece.x][piece.y]
+                    placedSquare.element.append( piece.element )
+                    placedSquare.occupied = Number(i)
+                }
+            }
+
+
+            function pick(e){
+                console.log('picked')
+                pieceId = Number(e.target.id)
+                piece = pieces[ pieceId ]
+                
+                if(piece.player != playerChance){
+                    setAlert( 'You can not pick this' )
+                    return
+                }
+
+                setAlert('picked ' + piece.type)
+                clearBoard()
+                picked =  pieceId
+                var dropCutPlaces = getDropCutPlaces(piece)
+                var dropPlaces = dropCutPlaces[0]
+                var cutPlaces = dropCutPlaces[1]
+                
+                square = board[ piece.x ][ piece.y ]
+                square.element.setAttribute('class', 'picked')
+                
+                activateDropPlaces(dropPlaces)
+                activateCutPlaces(cutPlaces)
+            }
+
+            
+            function getDropCutPlaces(piece){
+                var dropPlaces = []
+                var cutPlaces = []
+                var x,y ,type
+                x = piece.x
+                y = piece.y
+                console.log(x,y)
+                player = piece.player
+                type = piece.type
+
+                switch(type){
+                    case 'pawn': getPawnPlaces( x, y, player, dropPlaces, cutPlaces )
+                                 break
+
+                    case 'bishop': getBishopPlaces( x, y, dropPlaces, cutPlaces )
+                                   break
+
+                    case 'rook': getRookPlaces( x, y, dropPlaces, cutPlaces )
+                                 break
+                    
+                    case 'queen': getBishopPlaces( x, y, dropPlaces, cutPlaces )
+                                  getRookPlaces( x, y, dropPlaces, cutPlaces )
+                                  break
+
+                    case 'knight': getKnightPlaces( x, y, dropPlaces, cutPlaces )
+                                   break
+
+                    case 'king':   getKingPlaces( x, y, dropPlaces, cutPlaces )
+                                   break
+                }
+                return [dropPlaces , cutPlaces]
+            }
+            
+            
+            function getPawnPlaces( x, y, player, dropPlaces, cutPlaces ){
+                if ( player == 1 ){
+                    x++
+                    if(x < 8 )
+                    {
+                        if ( board[x][y].occupied === -1 ){
+                            dropPlaces.push( { x: x, y: y } ) 
+                        }
+                        y++
+                        if( y < 8 && board[x][y].occupied > 15){
+                            cutPlaces.push( { x: x, y: y } )
+                        }
+                        y-=2
+                        if( y > 0 && board[x][y].occupied > 15){
+                            cutPlaces.push( { x: x, y: y } )
+                        }
+                    }
+                }else{
+                    x--
+                    if(x >0)
+                    {
+                        if ( board[x][y].occupied === -1 ){
+                            dropPlaces.push( { x: x, y: y } ) 
+                        }
+                        y++
+                        if( y < 8 && board[x][y].occupied < 16 && board[x][y].occupied !== -1 ){
+                            cutPlaces.push( { x: x, y: y } )
+                        }
+                        y-=2
+                        if( y > 0 && board[x][y].occupied < 16  && board[x][y].occupied !== -1 ){
+                            cutPlaces.push( { x: x, y: y } )
+                        }
+                    }
+                }
+            }
+
+            
+            function getBishopPlaces( x, y, dropPlaces, cutPlaces ){
+                var main_x = x
+                var main_y = y
+                
+                x--,y--
+                while( validate( x, y, dropPlaces, cutPlaces ) ){
+                        x--,y--
+                }
+                
+                x = main_x
+                y = main_y 
+                x++,y++
+                while( validate( x, y, dropPlaces, cutPlaces ) ){
+                        x++,y++
+                }
+
+                x = main_x
+                y = main_y 
+                x--,y++
+                while( validate( x, y, dropPlaces, cutPlaces ) ){
+                        x--,y++
+                }
+
+                x = main_x
+                y = main_y 
+                x++,y--
+                while( validate( x, y, dropPlaces, cutPlaces ) ){
+                        x++,y--
+                }
+            }
+
+            
+            function getRookPlaces( x, y, dropPlaces, cutPlaces ){
+                var main_x = x
+                var main_y = y
+                
+                y--
+                while( validate( x, y, dropPlaces, cutPlaces ) ){
+                    y--
+                }
+                
+                x = main_x
+                y = main_y 
+                x--
+                while( validate( x, y, dropPlaces, cutPlaces ) ){
+                    x--
+                }
+
+                x = main_x
+                y = main_y 
+                y++
+                while( validate( x, y, dropPlaces, cutPlaces ) ){
+                    y++
+                }
+
+                x = main_x
+                y = main_y 
+                x++
+                while( validate( x, y, dropPlaces, cutPlaces ) ){
+                    x++
+                }
+            }
+
+
+            function getKnightPlaces( x, y, dropPlaces, cutPlaces ){
+
+                validate( x + 2 ,y + 1 , dropPlaces, cutPlaces )
+                validate( x + 2 ,y - 1 , dropPlaces, cutPlaces )
+                validate( x - 2 ,y + 1 , dropPlaces, cutPlaces )
+                validate( x - 2 ,y - 1 , dropPlaces, cutPlaces )
+                validate( x - 1 ,y + 2 , dropPlaces, cutPlaces )
+                validate( x + 1 ,y + 2 , dropPlaces, cutPlaces )
+                validate( x - 1 ,y - 2 , dropPlaces, cutPlaces )
+                validate( x + 1 ,y - 2 , dropPlaces, cutPlaces )
+            }
+
+            
+            function getKingPlaces( x, y, dropPlaces, cutPlaces ){
+
+                validate( x + 1 ,y , dropPlaces, cutPlaces )
+                validate( x ,y + 1 , dropPlaces, cutPlaces )
+                validate( x - 1 ,y , dropPlaces, cutPlaces )
+                validate( x ,y - 1 , dropPlaces, cutPlaces )
+                validate( x - 1 ,y - 1 , dropPlaces, cutPlaces )
+                validate( x + 1 ,y + 1 , dropPlaces, cutPlaces )
+                validate( x - 1 ,y + 1 , dropPlaces, cutPlaces )
+                validate( x + 1 ,y - 1 , dropPlaces, cutPlaces )
+
+            }
+            
+            
+            function validate( x ,y , dropPlaces, cutPlaces ){
+                var square,occupiedBy
+                
+                if(x >= 0 && x < 8 && y >= 0 && y < 8 )
+                {
+                    square = board[x][y]
+                    occupiedBy = square.occupied
+                    if( occupiedBy == -1 ){
+                        dropPlaces.push( { x: x, y: y } )
+                        return true
+                    }else{
+                        if( playerChance === 1 ){
+                            if( occupiedBy > 15 ){
+                                cutPlaces.push( { x: x, y: y } )
+                                return false
+                            }else{
+                                return false
+                            }
+                        }else{
+                            if( occupiedBy < 16 ){
+                                cutPlaces.push( { x: x, y: y } )
+                                return false
+                            }else{
+                                return false
+                            }
+                        }
+                    }
+                }
+            }
+            
+            
+            function activateCutPlaces(arr){
+                var square, place
+                for(i in arr)
+                {
+                    place = arr[i]
+                    square = board [ place.x ][ place.y ].element
+                    square.setAttribute('class', 'cut')
+                    square.addEventListener('click', cut)
+                }
+            }
+            
+            
+            function activateDropPlaces(arr){
+                var square, place
+                for(i in arr)
+                {
+                    place = arr[i]
+                    square = board [ place.x ][ place.y ].element
+                    square.setAttribute('class', 'drop')
+                    square.addEventListener('click', drop)
+
+                }
+            }
+
+            
+            function cut(e){
+                console.log('cut')
+                var target = e.target
+                console.log(target.nodeName)
+                if(target.nodeName == 'I'){
+                    target = target.parentNode
+                }
+                var dropSquareX = Number( target.getAttribute('x') )
+                var dropSquareY = Number( target.getAttribute('Y') )
+               
+                var piece = pieces[picked]
+                var pickedSquare = board[piece.x][piece.y]
+                var dropSquare = board[dropSquareX][dropSquareY]
+                piece.x = dropSquareX
+                piece.y = dropSquareY
+                
+                var dropPiece = dropSquare.occupied
+                dropPiece.x = dropPiece.y = -1
+                dropSquare.element.textContent = ''
+                
+                dropSquare.occupied = picked
+                dropSquare.element.append(piece.element)
+                pickedSquare.occupied = -1
+                
+                playerChance = playerChance === 1 ? 2 : 1
+                picked = -1
+                setPlayerChance()
+                console.log(dropSquare, pickedSquare)
+                clearBoard()
+            }
+            
+            
+            function drop(e){
+                console.log('droped')
+                var target = e.target
+                var dropSquareX = Number( target.getAttribute('x') )
+                var dropSquareY = Number( target.getAttribute('Y') )
+                var piece = pieces[picked]
+                var pickedSquare = board[piece.x][piece.y]
+                var dropSquare = board[dropSquareX][dropSquareY]
+                
+                piece.x = dropSquareX
+                piece.y = dropSquareY
+                
+
+                dropSquare.occupied = picked
+                dropSquare.element.append(piece.element)
+                pickedSquare.occupied = -1
+                
+                playerChance = playerChance === 1 ? 2 : 1
+                picked = -1
+                setPlayerChance()
+                console.log(dropSquare, pickedSquare)
+                clearBoard()
+            }
+            
+            
+            //clear event listner and classes of chess board divs
+            function clearBoard(){
+                for( i = 0 ; i < 8; i++ ){
+                    for( j = 0 ; j < 8; j++ ){
+                        square  = board[i][j]
+                        square.element.removeAttribute('class')
+                        square.element.removeEventListener('click', drop)
+                        square.element.removeEventListener('click',cut)
+                    }
+                }
+            }
+
+            
+            function setAlert( txt ){
+                var playerChanceDiv = document.querySelector('.alert')
+                playerChanceDiv.textContent = txt
+            }
+            
+            
+            function setPlayerChance(){
+                var playerChanceDiv = document.querySelector('.playerChance')
+                playerChanceDiv.textContent = (playerChance == 1 ? player1Name : player2Name) + ' Chance'
+            }
+
+
+            function startMatch(){
+                var p1Input = document.getElementById('p1')
+                var p2Input = document.getElementById('p2')
+                player1Name = p1Input.value
+                player2Name = p2Input.value
+                p1Input.remove()
+                p2Input.remove()
+                
+                button.removeEventListener('click', startMatch)
+                button.textContent = 'Reset Match'
+                button.addEventListener('click', reset)
+
+                createPieces()
+                renderPieces()
+                setPlayerChance()
+            }
+           
+           
+            function reset(){
+                board = []
+                pieces = []
+                createBoard()
+                renderBoard()
+                createPieces()
+                renderPieces()
+                setPlayerChance()
+            }
+
+           
+            window.addEventListener('load',function(){
+                button = document.getElementById('button')
+                button.addEventListener('click', startMatch)
+                createBoard()
+                renderBoard()
+                
+            })
+        </script>
+    </body>
+</html>
