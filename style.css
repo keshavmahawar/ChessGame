@@ -1,0 +1,76 @@
+*{
+    font-family: Arial, Helvetica, sans-serif;
+}
+.chessBoard{
+    display: grid;
+    border: 1px solid black;
+    height: 600px;
+    width: 600px;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+}
+.chessBoard > div{
+    text-align: center;
+    padding: 10px;
+    background-color: #E6BA8F;
+}
+.chessBoard > div:nth-child(16n+1), 
+.chessBoard > div:nth-child(16n+3),
+.chessBoard > div:nth-child(16n+5),
+.chessBoard > div:nth-child(16n+7),
+.chessBoard > div:nth-child(16n+10),
+.chessBoard > div:nth-child(16n+12),
+.chessBoard > div:nth-child(16n+14),
+.chessBoard > div:nth-child(16n+16){
+    background-color: #BD7D40;
+}
+.white{
+    color: white;
+}
+.black{
+    color: black;
+}
+.picked{
+    background-color: orange !important;
+}
+.drop{
+    background-color: skyblue !important;
+    border: 1px solid black;
+}
+.cut{
+    background-color: tomato !important;
+}
+.main-div{
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}
+.main-div > div {
+    margin: 20px;
+}
+.stats > * {
+    margin: 10px;
+}
+.playerChance{
+    width: 500px;
+    font-size: 30px;
+}
+.stats button{
+    font-size: 20px;
+    padding: 10px 20px;
+    border: none;
+    background-color: lime;
+    border-radius: 10px;
+}
+.stats input{
+    font-size: 25px;
+    padding: 10px;
+}
+.alert{
+    color: red;
+}
+@media screen and (max-width: 1000px){
+    .main-div{
+        flex-direction: column-reverse;
+    }
+}
