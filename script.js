@@ -2,7 +2,8 @@ var board = []
 var pieces = []
 var playerChance = 1
 var picked = -1
-var button, player1Name, player2Name
+var undoMove
+var button, player1Name, player2Name, undoButton
 
 function createBoard(){
     var div
@@ -82,8 +83,6 @@ function renderBoard(){
 
 
 function renderPieces(){
-    console.log(pieces)
-    console.log(board)
     var piece,placedSquare
     for( var i in pieces){
         piece = pieces[i]
@@ -102,12 +101,10 @@ function getDropCutPlaces(piece){
     var x,y ,type
     x = piece.x
     y = piece.y
-    console.log(x,y)
-    player = piece.player
     type = piece.type
 
     switch(type){
-        case 'pawn': getPawnPlaces( x, y, player, dropPlaces, cutPlaces )
+        case 'pawn': getPawnPlaces( x, y, dropPlaces, cutPlaces )
                         break
 
         case 'bishop': getBishopPlaces( x, y, dropPlaces, cutPlaces )
@@ -130,36 +127,42 @@ function getDropCutPlaces(piece){
 }
 
 
-function getPawnPlaces( x, y, player, dropPlaces, cutPlaces ){
+function getPawnPlaces( x, y, dropPlaces, cutPlaces ){
+    var occupiedBy
+    var player = playerChance
+
     if ( player == 1 ){
         x++
+        occupiedBy = board[x][y].occupied
         if(x < 8 )
         {
-            if ( board[x][y].occupied === -1 ){
+
+            if ( occupiedBy === -1 ){
                 dropPlaces.push( { x: x, y: y } ) 
             }
             y++
-            if( y < 8 && board[x][y].occupied > 15){
+            if( y < 8 && isPlayer2Piece( occupiedBy ) ){
                 cutPlaces.push( { x: x, y: y } )
             }
             y-=2
-            if( y > 0 && board[x][y].occupied > 15){
+            if( y > 0 && isPlayer2Piece( occupiedBy ) ){
                 cutPlaces.push( { x: x, y: y } )
             }
         }
     }else{
         x--
+        occupiedBy = board[x][y].occupied
         if(x >0)
         {
-            if ( board[x][y].occupied === -1 ){
+            if ( occupiedBy === -1 ){
                 dropPlaces.push( { x: x, y: y } ) 
             }
             y++
-            if( y < 8 && board[x][y].occupied < 16 && board[x][y].occupied !== -1 ){
+            if( y < 8 && isPlayer1Piece( occupiedBy ) ){
                 cutPlaces.push( { x: x, y: y } )
             }
             y-=2
-            if( y > 0 && board[x][y].occupied < 16  && board[x][y].occupied !== -1 ){
+            if( y > 0 && isPlayer1Piece( occupiedBy ) ){
                 cutPlaces.push( { x: x, y: y } )
             }
         }
@@ -270,14 +273,14 @@ function validate( x ,y , dropPlaces, cutPlaces ){
             return true
         }else{
             if( playerChance === 1 ){
-                if( occupiedBy > 15 ){
+                if( isPlayer2Piece( occupiedBy ) ){
                     cutPlaces.push( { x: x, y: y } )
                     return false
                 }else{
                     return false
                 }
             }else{
-                if( occupiedBy < 16 ){
+                if( isPlayer1Piece( occupiedBy ) ){
                     cutPlaces.push( { x: x, y: y } )
                     return false
                 }else{
@@ -290,6 +293,29 @@ function validate( x ,y , dropPlaces, cutPlaces ){
 
 //------movable position functions ends here-------
 
+
+function isPlayer1Piece( pieceId ){
+    return pieceId < 16 && pieceId > -1
+}
+
+
+function isPlayer2Piece( pieceId ){
+    return pieceId > 15
+}
+
+function occupiedById( x, y ){
+    return board[x][y].occupied
+}
+
+function isKingInDanger( KingPlayer ){
+    // var kingPosX, kingPosY
+    // if ( KingPlayer == 1 )
+    // {
+    //     pieces
+    // }
+
+    // if 
+}
 
 //higlights all the places where we can cut other player's piece
 function activateCutPlaces(arr){
@@ -306,13 +332,11 @@ function activateCutPlaces(arr){
 //higlights all the places where we can place our piece
 function activateDropPlaces(arr){
     var square, place
-    for(i in arr)
-    {
+    for(i in arr){
         place = arr[i]
         square = board [ place.x ][ place.y ].element
         square.setAttribute('class', 'drop')
         square.addEventListener('click', drop)
-
     }
 }
 
@@ -320,7 +344,6 @@ function activateDropPlaces(arr){
 function pick(e){
     pieceId = Number(e.target.id)
     piece = pieces[ pieceId ]
-    setAlert('')
     if(piece.player != playerChance){
         setAlert( 'You can not pick this' )
         return
@@ -341,7 +364,6 @@ function pick(e){
 
 //cut the existing piece from that square with moving piece
 function cut(e){
-    setAlert('')
     var target = e.target
     if(target.nodeName == 'I'){
         target = target.parentNode
@@ -352,10 +374,20 @@ function cut(e){
     var piece = pieces[picked]
     var pickedSquare = board[piece.x][piece.y]
     var dropSquare = board[dropSquareX][dropSquareY]
+    var dropPiece = pieces[dropSquare.occupied]
+    
+    undoMove = {
+                    pickedSquare: pickedSquare,
+                    dropSquare: dropSquare,
+                    pickedSquareCord: [piece.x, piece.y],
+                    dropSquareCord: [dropSquareX, dropSquareY],
+                    pickedPiece: piece,
+                    cutPiece: dropPiece
+                }
+
     piece.x = dropSquareX
     piece.y = dropSquareY
     
-    var dropPiece = dropSquare.occupied
     dropPiece.x = dropPiece.y = -1
     dropSquare.element.textContent = ''
     
@@ -371,7 +403,6 @@ function cut(e){
 
 //drop the moving piece to a square
 function drop(e){
-    setAlert('')
     var target = e.target
     var dropSquareX = Number( target.getAttribute('x') )
     var dropSquareY = Number( target.getAttribute('Y') )
@@ -379,20 +410,27 @@ function drop(e){
     var pickedSquare = board[piece.x][piece.y]
     var dropSquare = board[dropSquareX][dropSquareY]
     
+    undoMove = {
+                pickedSquare: pickedSquare,
+                dropSquare: dropSquare,
+                pickedSquareCord: [piece.x, piece.y],
+                dropSquareCord: [dropSquareX, dropSquareY],
+                pickedPiece: piece,
+                cutPiece: null
+               }
+    
     piece.x = dropSquareX
     piece.y = dropSquareY
     
-
     dropSquare.occupied = picked
     dropSquare.element.append(piece.element)
     pickedSquare.occupied = -1
-    
+
     playerChance = playerChance === 1 ? 2 : 1
     picked = -1
     setPlayerChance()
     clearBoard()
 }
-
 
 //clear event listner and classes of chess board divs
 function clearBoard(){
@@ -410,6 +448,13 @@ function clearBoard(){
 function setAlert( txt ){
     var playerChanceDiv = document.querySelector('.alert')
     playerChanceDiv.textContent = txt
+    setTimeout( clearAlert, 1500 )
+}
+
+
+function clearAlert(){
+    var playerChanceDiv = document.querySelector('.alert')
+    playerChanceDiv.textContent = ''
 }
 
 
@@ -422,6 +467,12 @@ function setPlayerChance(){
 function startMatch(){
     var p1Input = document.getElementById('p1')
     var p2Input = document.getElementById('p2')
+    var statsDiv = p1.parentNode
+    undoButton = document.createElement('button')
+    undoButton.textContent = 'Undo'
+    undoButton.addEventListener('click', undo)
+
+    statsDiv.append( undoButton )
     player1Name = p1Input.value
     player2Name = p2Input.value
     p1Input.remove()
@@ -434,6 +485,43 @@ function startMatch(){
     createPieces()
     renderPieces()
     setPlayerChance()
+}
+
+
+function undo(){
+    if(!undoMove){
+        setAlert('No moves to undo')
+        return
+    }
+    
+    var pickedSquare = undoMove.pickedSquare
+    var pickedPiece = undoMove.pickedPiece
+    var pickedSquareCord = undoMove.pickedSquareCord
+    var pickedPieceId = Number( pickedPiece.element.id ) 
+
+    var dropSquare = undoMove.dropSquare
+    var dropSquareCord = undoMove.dropSquareCord
+    var cutPiece = undoMove.cutPiece
+    var cutPieceId = -1
+    
+    pickedSquare.element.append( pickedPiece.element )
+    pickedPiece.x = pickedSquareCord[0]
+    pickedPiece.y = pickedSquareCord[1]
+    pickedSquare.occupied = pickedPieceId
+    
+    if(cutPiece){
+        cutPieceId = Number( cutPiece.element.id )
+        dropSquare.element.append( cutPiece.element )
+        cutPiece.x = dropSquareCord[0]
+        cutPiece.y = dropSquareCord[1]
+    }
+    dropSquare.occupied = cutPieceId
+
+    playerChance = playerChance === 1 ? 2 : 1
+    setPlayerChance()
+    undoMove = null
+
+
 }
 
 
