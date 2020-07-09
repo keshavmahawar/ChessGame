@@ -1,18 +1,25 @@
-*{
-    font-family: Arial, Helvetica, sans-serif;
+body{
+    font-family: 'Orbitron', sans-serif;
+    background-color: black;
+    color: white;
+}
+.main-heading{
+    text-align: center;
+    font-size: 40px;
+    margin: 10px auto;
 }
 .chessBoard{
     display: grid;
     border: 1px solid black;
-    height: 600px;
-    width: 600px;
+    height: 550px;
+    width: 550px;
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
 }
 .chessBoard > div{
     text-align: center;
     padding: 10px;
-    background-color: #E6BA8F;
+    background-color: #DBDBDB;
 }
 .chessBoard > div:nth-child(16n+1), 
 .chessBoard > div:nth-child(16n+3),
@@ -22,13 +29,13 @@
 .chessBoard > div:nth-child(16n+12),
 .chessBoard > div:nth-child(16n+14),
 .chessBoard > div:nth-child(16n+16){
-    background-color: #BD7D40;
+    background-color: #639C56;
 }
 .white{
-    color: white;
+    color: #AC2525;
 }
 .black{
-    color: black;
+    color: #2A2A2A;
 }
 .picked{
     background-color: orange !important;
@@ -44,6 +51,9 @@
     display: flex;
     align-items: center;
     justify-content: space-evenly;
+    background-color: #30452B;
+    margin: 5px auto;
+    width: 90%;
 }
 .main-div > div {
     margin: 20px;
@@ -57,12 +67,15 @@
 }
 .stats button{
     font-size: 20px;
+    font-family: 'Orbitron', sans-serif;
     padding: 10px 20px;
     border: none;
     background-color: lime;
+    color: white;
     border-radius: 10px;
 }
 .stats input{
+    font-family: 'Orbitron', sans-serif;
     font-size: 25px;
     padding: 10px;
 }

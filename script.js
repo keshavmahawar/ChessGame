@@ -93,7 +93,7 @@ function renderPieces(){
 }
 
 
-//----fuctions to claculate all the moveable positions starts here-----
+//----functions to calculate all the moveable positions starts here-----
 
 function getDropCutPlaces(piece){
     var dropPlaces = []
@@ -141,11 +141,11 @@ function getPawnPlaces( x, y, dropPlaces, cutPlaces ){
                 dropPlaces.push( { x: x, y: y } ) 
             }
             y++
-            if( y < 8 && isPlayer2Piece( occupiedBy ) ){
+            if( y < 8 && isPlayer2Piece( board[x][y].occupied ) ){
                 cutPlaces.push( { x: x, y: y } )
             }
             y-=2
-            if( y > 0 && isPlayer2Piece( occupiedBy ) ){
+            if( y > 0 && isPlayer2Piece( board[x][y].occupied ) ){
                 cutPlaces.push( { x: x, y: y } )
             }
         }
@@ -158,11 +158,11 @@ function getPawnPlaces( x, y, dropPlaces, cutPlaces ){
                 dropPlaces.push( { x: x, y: y } ) 
             }
             y++
-            if( y < 8 && isPlayer1Piece( occupiedBy ) ){
+            if( y < 8 && isPlayer1Piece( board[x][y].occupied ) ){
                 cutPlaces.push( { x: x, y: y } )
             }
             y-=2
-            if( y > 0 && isPlayer1Piece( occupiedBy ) ){
+            if( y > 0 && isPlayer1Piece( board[x][y].occupied ) ){
                 cutPlaces.push( { x: x, y: y } )
             }
         }
@@ -307,6 +307,7 @@ function occupiedById( x, y ){
     return board[x][y].occupied
 }
 
+//--future feature
 function isKingInDanger( KingPlayer ){
     // var kingPosX, kingPosY
     // if ( KingPlayer == 1 )
@@ -317,7 +318,7 @@ function isKingInDanger( KingPlayer ){
     // if 
 }
 
-//higlights all the places where we can cut other player's piece
+//highlights all the places where we can cut other player's piece
 function activateCutPlaces(arr){
     var square, place
     for(i in arr)
@@ -329,7 +330,7 @@ function activateCutPlaces(arr){
     }
 }
 
-//higlights all the places where we can place our piece
+//highlights all the places where we can place our piece
 function activateDropPlaces(arr){
     var square, place
     for(i in arr){
@@ -340,7 +341,7 @@ function activateDropPlaces(arr){
     }
 }
 
-//invoke higlighting functions
+//invoke highlighting functions
 function pick(e){
     pieceId = Number(e.target.id)
     piece = pieces[ pieceId ]
@@ -432,7 +433,7 @@ function drop(e){
     clearBoard()
 }
 
-//clear event listner and classes of chess board divs
+//clear event listener and classes of chess board divs
 function clearBoard(){
     for( i = 0 ; i < 8; i++ ){
         for( j = 0 ; j < 8; j++ ){
@@ -529,6 +530,7 @@ function reset(){
     board = []
     pieces = []
     playerChance = 1
+    undoMove = null
     createBoard()
     renderBoard()
     createPieces()
